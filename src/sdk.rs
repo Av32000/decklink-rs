@@ -2975,6 +2975,17 @@ unsafe extern "C" {
     ) -> HRESULT;
 }
 unsafe extern "C" {
+    pub fn cdecklink_video_frame_get_bytes(
+        obj: *mut cdecklink_video_frame_t,
+        buffer: *mut *mut ::std::os::raw::c_void,
+    ) -> HRESULT;
+}
+unsafe extern "C" {
+    pub fn cdecklink_video_frame_end_access(
+        obj: *mut cdecklink_video_frame_t,
+    ) -> HRESULT;
+}
+unsafe extern "C" {
     pub fn cdecklink_video_input_frame_to_video_frame(
         obj: *mut cdecklink_video_input_frame_t,
     ) -> *mut cdecklink_video_frame_t;

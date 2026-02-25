@@ -117,12 +117,7 @@ impl DecklinkVideoFrame {
         assert!(!self.frame.is_null());
 
         let mut bytes: *mut std::ffi::c_void = std::ptr::null_mut();
-        let result = unsafe {
-            sdk::cdecklink_video_buffer_get_bytes(
-                self.frame as *mut sdk::cdecklink_video_buffer_t,
-                &mut bytes,
-            )
-        };
+        let result = unsafe { sdk::cdecklink_video_frame_get_bytes(self.frame, &mut bytes) };
         SdkError::result::<()>(result)?;
 
         assert!(!bytes.is_null());
@@ -132,6 +127,9 @@ impl DecklinkVideoFrame {
 
         unsafe { std::ptr::copy(bytes as *const u8, result.as_mut_ptr(), byte_count) };
 
+        // End buffer access (required for v15+ IDeckLinkVideoBuffer)
+        unsafe { sdk::cdecklink_video_frame_end_access(self.frame) };
+
         Ok(result)
     }
 
@@ -140,12 +138,7 @@ impl DecklinkVideoFrame {
         assert!(!self.frame.is_null());
 
         let mut bytes: *mut std::ffi::c_void = std::ptr::null_mut();
-        let result = unsafe {
-            sdk::cdecklink_video_buffer_get_bytes(
-                self.frame as *mut sdk::cdecklink_video_buffer_t,
-                &mut bytes,
-            )
-        };
+        let result = unsafe { sdk::cdecklink_video_frame_get_bytes(self.frame, &mut bytes) };
         SdkError::result::<()>(result)?;
 
         assert!(!bytes.is_null());
@@ -162,7 +155,7 @@ impl DecklinkVideoFrame {
     // }
     /// Wrap a raw pointer
     pub(crate) unsafe fn from(ptr: *mut sdk::cdecklink_video_frame_t) -> Self {
-        sdk::cdecklink_mutable_video_frame_add_ref(ptr); // TODO - all types should do this
+        sdk::cdecklink_video_frame_add_ref(ptr);
         Self { frame: ptr }
     }
 }
