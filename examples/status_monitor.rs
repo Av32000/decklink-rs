@@ -89,11 +89,6 @@ fn print_status(status: &DecklinkDeviceStatus, id: DecklinkStatusId) {
                 print_line(id, format!("{:08X}", value))
             }
         }
-        DecklinkStatusId::DuplexMode => {
-            if let Ok(value) = status.duplex_mode() {
-                print_line(id, format!("{:?}", value))
-            }
-        }
         DecklinkStatusId::Busy => {
             if let Ok(value) = status.busy() {
                 print_line(id, format!("{:08X}", value))
@@ -140,7 +135,6 @@ fn main() {
 
     // Print general status values
     print_status(&status, DecklinkStatusId::Busy);
-    print_status(&status, DecklinkStatusId::DuplexMode);
     print_status(&status, DecklinkStatusId::PCIExpressLinkWidth);
     print_status(&status, DecklinkStatusId::PCIExpressLinkSpeed);
 

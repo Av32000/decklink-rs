@@ -13,7 +13,7 @@ pub struct DecklinkDeviceStatus {
 pub enum DecklinkStatusId {
     /// The detected video input mode (BMDDisplayMode), available on devices which support input format detection.
     DetectedVideoInputMode = sdk::_DecklinkStatusID_decklinkStatusDetectedVideoInputMode as isize,
-    DetectedVideoInputFlags = sdk::_DecklinkStatusID_decklinkStatusDetectedVideoInputFlags as isize,
+    DetectedVideoInputFlags = sdk::_DecklinkStatusID_decklinkStatusDetectedVideoInputFormatFlags as isize,
     /// The current video input mode (BMDDisplayMode).
     CurrentVideoInputMode = sdk::_DecklinkStatusID_decklinkStatusCurrentVideoInputMode as isize,
     /// The current video input pixel format (BMDPixelFormat).
@@ -36,7 +36,6 @@ pub enum DecklinkStatusId {
     ReferenceSignalMode = sdk::_DecklinkStatusID_decklinkStatusReferenceSignalMode as isize,
     /// The detected reference input flags (BMDDeckLinkVideoStatusFlags), available on devices which support reference input format detection.
     ReferenceSignalFlags = sdk::_DecklinkStatusID_decklinkStatusReferenceSignalFlags as isize,
-    DuplexMode = sdk::_DecklinkStatusID_decklinkStatusDuplexMode as isize,
     /// The current busy state of the device. (See BMDDeviceBusyState for more information).
     Busy = sdk::_DecklinkStatusID_decklinkStatusBusy as isize,
     /// The interchangeable panel installed (BMDPanelType).
@@ -62,17 +61,6 @@ bitflags! {
     }
 }
 
-#[derive(FromPrimitive, PartialEq, Debug, Copy, Clone)]
-pub enum DecklinkDuplexStatus {
-    /// Capable of simultaneous playback and capture.
-    FullDuplex = sdk::_DecklinkDuplexStatus_decklinkDuplexStatusFullDuplex as isize,
-    /// Capable of playback or capture but not both simultaneously.
-    HaldDuplex = sdk::_DecklinkDuplexStatus_decklinkDuplexStatusHalfDuplex as isize,
-    /// Capable of playback only or capture only.
-    Simplex = sdk::_DecklinkDuplexStatus_decklinkDuplexStatusSimplex as isize,
-    /// Device is inactive for this profile.
-    Inactive = sdk::_DecklinkDuplexStatus_decklinkDuplexStatusInactive as isize,
-}
 
 impl Drop for DecklinkDeviceStatus {
     fn drop(&mut self) {
@@ -136,7 +124,7 @@ impl DecklinkDeviceStatus {
         into_enum(self.get_int(sdk::_DecklinkStatusID_decklinkStatusDetectedVideoInputMode))
     }
     pub fn detected_video_input_flags(&self) -> Result<DecklinkVideoStatusFlags, SdkError> {
-        self.get_int(sdk::_DecklinkStatusID_decklinkStatusDetectedVideoInputFlags)
+        self.get_int(sdk::_DecklinkStatusID_decklinkStatusDetectedVideoInputFormatFlags)
             .map(|v| DecklinkVideoStatusFlags::from_bits_truncate(v as u32))
     }
     /// The current video input mode (BMDDisplayMode).
@@ -182,9 +170,7 @@ impl DecklinkDeviceStatus {
     pub fn reference_signal_flags(&self) -> Result<i64, SdkError> {
         self.get_int(sdk::_DecklinkStatusID_decklinkStatusReferenceSignalFlags)
     }
-    pub fn duplex_mode(&self) -> Result<DecklinkDuplexStatus, SdkError> {
-        into_enum(self.get_int(sdk::_DecklinkStatusID_decklinkStatusDuplexMode))
-    }
+
     /// The current busy state of the device. (See BMDDeviceBusyState for more information).
     pub fn busy(&self) -> Result<i64, SdkError> {
         self.get_int(sdk::_DecklinkStatusID_decklinkStatusBusy)

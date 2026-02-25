@@ -40,8 +40,6 @@ pub enum DecklinkDisplayModeId {
     UHD4KDCI2398 = sdk::_DecklinkDisplayMode_decklinkMode4kDCI2398 as isize,
     UHD4KDCI24 = sdk::_DecklinkDisplayMode_decklinkMode4kDCI24 as isize,
     UHD4KDCI25 = sdk::_DecklinkDisplayMode_decklinkMode4kDCI25 as isize,
-    CintelRAW = sdk::_DecklinkDisplayMode_decklinkModeCintelRAW as isize,
-    CintelCompressedRAW = sdk::_DecklinkDisplayMode_decklinkModeCintelCompressedRAW as isize,
     Unknown = sdk::_DecklinkDisplayMode_decklinkModeUnknown as isize,
 }
 
@@ -149,8 +147,8 @@ pub(crate) unsafe fn iterate_display_modes(
     Ok(res)
 }
 
-pub(crate) unsafe fn wrap_display_mode(
-    ptr: *mut sdk::cdecklink_display_mode_t,
-) -> DecklinkDisplayMode {
-    DecklinkDisplayMode { mode: ptr }
-}
+// pub(crate) unsafe fn wrap_display_mode(
+//     ptr: *mut sdk::cdecklink_display_mode_t,
+// ) -> DecklinkDisplayMode {
+//     DecklinkDisplayMode { mode: ptr }
+// }

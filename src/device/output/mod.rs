@@ -7,7 +7,7 @@ mod video_callback;
 use crate::device::output::device::DecklinkOutputDevicePtr;
 use crate::device::output::video_callback::register_callback;
 use crate::display_mode::{
-    iterate_display_modes, wrap_display_mode, DecklinkDisplayMode, DecklinkDisplayModeId,
+    iterate_display_modes, DecklinkDisplayMode, DecklinkDisplayModeId,
 };
 use crate::frame::DecklinkPixelFormat;
 use crate::{sdk, SdkError};
@@ -22,7 +22,7 @@ pub use crate::device::output::video::{
     DecklinkOutputDeviceVideoScheduled, DecklinkOutputDeviceVideoSync,
 };
 pub use crate::device::output::video_callback::DeckLinkVideoOutputCallback;
-use crate::device::{DecklinkDeviceDisplayModes, DecklinkDisplayModeSupport};
+use crate::device::DecklinkDeviceDisplayModes;
 
 use self::video::DecklinkOutputDeviceVideoImpl;
 
@@ -36,27 +36,24 @@ impl DecklinkDeviceDisplayModes<enums::DecklinkVideoOutputFlags> for DecklinkOut
         mode: DecklinkDisplayModeId,
         pixel_format: DecklinkPixelFormat,
         flags: enums::DecklinkVideoOutputFlags,
-    ) -> Result<(DecklinkDisplayModeSupport, Option<DecklinkDisplayMode>), SdkError> {
-        let mut supported = sdk::_DecklinkDisplayModeSupport_decklinkDisplayModeNotSupported;
-        let mut display_mode = null_mut();
+    ) -> Result<(bool, Option<DecklinkDisplayModeId>), SdkError> {
+        let mut supported = false;
+        let mut display_mode_id: u32 = 0;
         let result = unsafe {
             sdk::cdecklink_output_does_support_video_mode(
                 self.ptr.dev,
+                sdk::_DecklinkVideoConnection_decklinkVideoConnectionUnspecified,
                 mode as u32,
                 pixel_format as u32,
+                sdk::_DecklinkVideoOutputConversionMode_decklinkNoVideoOutputConversion,
                 flags.bits(),
+                &mut display_mode_id,
                 &mut supported,
-                &mut display_mode,
             )
         };
         SdkError::result_or_else(result, move || {
-            let supported2 = DecklinkDisplayModeSupport::from_u32(supported)
-                .unwrap_or(DecklinkDisplayModeSupport::NotSupported);
-            if display_mode.is_null() || supported2 == DecklinkDisplayModeSupport::NotSupported {
-                (DecklinkDisplayModeSupport::NotSupported, None)
-            } else {
-                unsafe { (supported2, Some(wrap_display_mode(display_mode))) }
-            }
+            let possible_mode = DecklinkDisplayModeId::from_u32(display_mode_id);
+            (supported, possible_mode)
         })
     }
 

@@ -7,45 +7,45 @@ use crate::{sdk, SdkError};
 use std::ptr::{null, null_mut};
 
 pub struct DecklinkDeviceAttributes {
-    dev: *mut sdk::cdecklink_attributes_t,
+    dev: *mut sdk::cdecklink_profile_attributes_t,
 }
 
 impl Drop for DecklinkDeviceAttributes {
     fn drop(&mut self) {
         if !self.dev.is_null() {
-            unsafe { sdk::cdecklink_attributes_release(self.dev) };
+            unsafe { sdk::cdecklink_profile_attributes_release(self.dev) };
             self.dev = null_mut();
         }
     }
 }
 
 impl DecklinkDeviceAttributes {
-    pub(crate) fn from(ptr: *mut sdk::cdecklink_attributes_t) -> DecklinkDeviceAttributes {
+    pub(crate) fn from(ptr: *mut sdk::cdecklink_profile_attributes_t) -> DecklinkDeviceAttributes {
         DecklinkDeviceAttributes { dev: ptr }
     }
 
     fn get_flag(&self, id: DecklinkAttributeID) -> Result<bool, SdkError> {
         let mut val = false;
-        let result = unsafe { sdk::cdecklink_attributes_get_flag(self.dev, id, &mut val) };
+        let result = unsafe { sdk::cdecklink_profile_attributes_get_flag(self.dev, id, &mut val) };
         SdkError::result_or(result, val)
     }
 
     fn get_int(&self, id: DecklinkAttributeID) -> Result<i64, SdkError> {
         let mut val = 0;
-        let result = unsafe { sdk::cdecklink_attributes_get_int(self.dev, id, &mut val) };
+        let result = unsafe { sdk::cdecklink_profile_attributes_get_int(self.dev, id, &mut val) };
         SdkError::result_or(result, val)
     }
 
     fn get_float(&self, id: DecklinkAttributeID) -> Result<f64, SdkError> {
         let mut val = 0.0;
-        let result = unsafe { sdk::cdecklink_attributes_get_float(self.dev, id, &mut val) };
+        let result = unsafe { sdk::cdecklink_profile_attributes_get_float(self.dev, id, &mut val) };
         SdkError::result_or(result, val)
     }
 
     fn get_string_pointer(&self, id: DecklinkAttributeID) -> Result<String, SdkError> {
         unsafe {
             let mut val = null();
-            let result = sdk::cdecklink_attributes_get_string(self.dev, id, &mut val);
+            let result = sdk::cdecklink_profile_attributes_get_string(self.dev, id, &mut val);
             SdkError::result_or_else(result, || convert_and_release_c_string(val))
         }
     }
@@ -53,7 +53,7 @@ impl DecklinkDeviceAttributes {
     fn get_string_from_reference(&self, id: DecklinkAttributeID) -> Result<String, SdkError> {
         unsafe {
             let mut val = null();
-            let result = sdk::cdecklink_attributes_get_string(self.dev, id, &mut val);
+            let result = sdk::cdecklink_profile_attributes_get_string(self.dev, id, &mut val);
             SdkError::result_or_else(result, || convert_c_string(val))
         }
     }
@@ -65,9 +65,6 @@ impl DecklinkDeviceAttributes {
     /// True if external keying is supported on this device.
     pub fn supports_external_keying(&self) -> Result<bool, SdkError> {
         self.get_flag(sdk::_DecklinkAttributeID_decklinkSupportsExternalKeying)
-    }
-    pub fn supports_hd_keying(&self) -> Result<bool, SdkError> {
-        self.get_flag(sdk::_DecklinkAttributeID_decklinkSupportsHDKeying)
     }
     /// True if input format detection is supported on this device.
     pub fn supports_input_format_detection(&self) -> Result<bool, SdkError> {
@@ -104,9 +101,6 @@ impl DecklinkDeviceAttributes {
     pub fn supports_clock_timing_adjustment(&self) -> Result<bool, SdkError> {
         self.get_flag(sdk::_DecklinkAttributeID_decklinkSupportsClockTimingAdjustment)
     }
-    pub fn supports_full_duplex(&self) -> Result<bool, SdkError> {
-        self.get_flag(sdk::_DecklinkAttributeID_decklinkSupportsFullDuplex)
-    }
     /// True if the DeckLink device supports genlock offset adjustment wider than +/511 pixels
     /// (see bmdDeckLinkConfigReferenceInputTimingOffset for more information).
     pub fn supports_full_frame_reference_input_timing_offset(&self) -> Result<bool, SdkError> {
@@ -132,9 +126,6 @@ impl DecklinkDeviceAttributes {
     /// True if this device has a dedicated LTC input.
     pub fn has_ltc_timecode_input(&self) -> Result<bool, SdkError> {
         self.get_flag(sdk::_DecklinkAttributeID_decklinkHasLTCTimecodeInput)
-    }
-    pub fn supports_duplex_mode_configuration(&self) -> Result<bool, SdkError> {
-        self.get_flag(sdk::_DecklinkAttributeID_decklinkSupportsDuplexModeConfiguration)
     }
     /// True if the device supports transport of HDR metadata.
     pub fn supports_hdr_metadata(&self) -> Result<bool, SdkError> {
@@ -238,9 +229,6 @@ impl DecklinkDeviceAttributes {
     /// Number of output audio XLR channels supported by this device
     pub fn audio_output_xlr_channel_count(&self) -> Result<i64, SdkError> {
         self.get_int(sdk::_DecklinkAttributeID_decklinkAudioOutputXLRChannelCount)
-    }
-    pub fn paired_device_persistent_id(&self) -> Result<i64, SdkError> {
-        self.get_int(sdk::_DecklinkAttributeID_decklinkPairedDevicePersistentID)
     }
 
     /// The minimum video input gain in dB for this device.

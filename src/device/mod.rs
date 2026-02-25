@@ -29,12 +29,10 @@ impl Drop for DecklinkDevice {
     }
 }
 
-#[derive(FromPrimitive, PartialEq)]
+#[derive(FromPrimitive, PartialEq, Debug)]
 pub enum DecklinkDisplayModeSupport {
-    NotSupported = sdk::_DecklinkDisplayModeSupport_decklinkDisplayModeNotSupported as isize,
-    Supported = sdk::_DecklinkDisplayModeSupport_decklinkDisplayModeSupported as isize,
-    SupportedWithConversion =
-        sdk::_DecklinkDisplayModeSupport_decklinkDisplayModeSupportedWithConversion as isize,
+    NotSupported = 0,
+    Supported = 1,
 }
 
 pub trait DecklinkDeviceDisplayModes<T> {
@@ -43,7 +41,7 @@ pub trait DecklinkDeviceDisplayModes<T> {
         mode: DecklinkDisplayModeId,
         pixel_format: DecklinkPixelFormat,
         flags: T,
-    ) -> Result<(DecklinkDisplayModeSupport, Option<DecklinkDisplayMode>), SdkError>;
+    ) -> Result<(bool, Option<DecklinkDisplayModeId>), SdkError>;
 
     fn display_modes(&self) -> Result<Vec<DecklinkDisplayMode>, SdkError>;
 }
@@ -70,7 +68,7 @@ impl DecklinkDevice {
 
     pub fn get_attributes(&self) -> Result<DecklinkDeviceAttributes, SdkError> {
         let mut s = null_mut();
-        let r = unsafe { sdk::cdecklink_device_query_attributes(self.dev, &mut s) };
+        let r = unsafe { sdk::cdecklink_device_query_profile_attributes(self.dev, &mut s) };
         SdkError::result_or_else(r, || DecklinkDeviceAttributes::from(s))
     }
     pub fn get_status(&self) -> Result<DecklinkDeviceStatus, SdkError> {

@@ -72,8 +72,13 @@ impl DecklinkOutputDeviceVideoSync for DecklinkOutputDeviceVideoImpl {
     fn display_frame_copy(&self, frame: &dyn DecklinkFrameBase) -> Result<(), SdkError> {
         let decklink_frame = self.convert_decklink_frame_without_bytes(frame)?;
 
-        let mut ptr = std::ptr::null_mut();
-        let result = unsafe { sdk::cdecklink_video_frame_get_bytes(decklink_frame.ptr, &mut ptr) };
+        let mut ptr: *mut std::ffi::c_void = std::ptr::null_mut();
+        let result = unsafe {
+            sdk::cdecklink_video_buffer_get_bytes(
+                decklink_frame.ptr as *mut sdk::cdecklink_video_buffer_t,
+                &mut ptr,
+            )
+        };
         SdkError::result::<()>(result)?;
 
         let byte_count = frame.row_bytes() * frame.height();
@@ -152,8 +157,13 @@ impl DecklinkOutputDeviceVideoScheduled for DecklinkOutputDeviceVideoImpl {
 
         let frame = self.convert_decklink_frame_without_bytes(frame)?;
 
-        let mut bytes_ptr = std::ptr::null_mut();
-        let result = unsafe { sdk::cdecklink_video_frame_get_bytes(frame.ptr, &mut bytes_ptr) };
+        let mut bytes_ptr: *mut std::ffi::c_void = std::ptr::null_mut();
+        let result = unsafe {
+            sdk::cdecklink_video_buffer_get_bytes(
+                frame.ptr as *mut sdk::cdecklink_video_buffer_t,
+                &mut bytes_ptr,
+            )
+        };
         SdkError::result::<()>(result)?;
         if bytes_ptr.is_null() {
             Err(SdkError::FAIL)?;

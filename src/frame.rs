@@ -16,8 +16,6 @@ pub enum DecklinkPixelFormat {
     Format10BitRGBX = sdk::_DecklinkPixelFormat_decklinkFormat10BitRGBX as isize,
     FormatH265 = sdk::_DecklinkPixelFormat_decklinkFormatH265 as isize,
     FormatDNxHR = sdk::_DecklinkPixelFormat_decklinkFormatDNxHR as isize,
-    Format12BitRAWGRBG = sdk::_DecklinkPixelFormat_decklinkFormat12BitRAWGRBG as isize,
-    Format12BitRAWJPEG = sdk::_DecklinkPixelFormat_decklinkFormat12BitRAWJPEG as isize,
 }
 
 bitflags! {
@@ -25,7 +23,6 @@ bitflags! {
     pub struct DecklinkFrameFlags: u32 {
         const FLIP_VERTICAL = sdk::_DecklinkFrameFlags_decklinkFrameFlagFlipVertical;
         const CONTAINS_HDR_METADATA = sdk::_DecklinkFrameFlags_decklinkFrameContainsHDRMetadata;
-        const CONTAINS_CINTEL_METADATA = sdk::_DecklinkFrameFlags_decklinkFrameContainsCintelMetadata;
         const HAS_NO_INPUT_SOURCE = sdk::_DecklinkFrameFlags_decklinkFrameHasNoInputSource;
     }
 }
@@ -119,8 +116,13 @@ impl DecklinkVideoFrame {
     pub fn bytes_to_vec(&self) -> Result<Vec<u8>, SdkError> {
         assert!(!self.frame.is_null());
 
-        let bytes = std::ptr::dangling_mut();
-        let result = unsafe { sdk::cdecklink_video_frame_get_bytes(self.frame, bytes) };
+        let mut bytes: *mut std::ffi::c_void = std::ptr::null_mut();
+        let result = unsafe {
+            sdk::cdecklink_video_buffer_get_bytes(
+                self.frame as *mut sdk::cdecklink_video_buffer_t,
+                &mut bytes,
+            )
+        };
         SdkError::result::<()>(result)?;
 
         assert!(!bytes.is_null());
@@ -137,8 +139,13 @@ impl DecklinkVideoFrame {
     pub fn bytes_handle(&self) -> Result<DecklinkAlignedBytes<'_>, SdkError> {
         assert!(!self.frame.is_null());
 
-        let bytes = std::ptr::dangling_mut();
-        let result = unsafe { sdk::cdecklink_video_frame_get_bytes(self.frame, bytes) };
+        let mut bytes: *mut std::ffi::c_void = std::ptr::null_mut();
+        let result = unsafe {
+            sdk::cdecklink_video_buffer_get_bytes(
+                self.frame as *mut sdk::cdecklink_video_buffer_t,
+                &mut bytes,
+            )
+        };
         SdkError::result::<()>(result)?;
 
         assert!(!bytes.is_null());

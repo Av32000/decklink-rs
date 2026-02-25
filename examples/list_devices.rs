@@ -108,12 +108,6 @@ fn print_attributes(device: &DecklinkDevice) {
                 print_col("Input mode detection supported ?", "Unknown");
             }
 
-            if let Ok(supported) = attributes.supports_full_duplex() {
-                print_col_bool("Full duplex operation supported ?", supported);
-            } else {
-                print_col("Full duplex operation supported ?", "Unknown");
-            }
-
             if let Ok(supported) = attributes.supports_internal_keying() {
                 print_col_bool("Internal keying supported ?", supported);
             } else {
@@ -125,14 +119,6 @@ fn print_attributes(device: &DecklinkDevice) {
             } else {
                 print_col("External keying supported ?", "Unknown");
             }
-
-            if let Ok(supported) = attributes.supports_hd_keying() {
-                print_col_bool("HD-mode keying supported ?", supported);
-            } else {
-                print_col("HD-mode keying supported ?", "Unknown");
-            }
-
-            //
         }
     }
 }
@@ -164,7 +150,7 @@ fn print_modes<T>(
                 let v = dev.does_support_video_mode(mode.mode(), format, flags);
                 match v {
                     Err(_) => DecklinkDisplayModeSupport::NotSupported,
-                    Ok(v) => v.0,
+                    Ok(_) => DecklinkDisplayModeSupport::Supported,
                 }
             };
 
