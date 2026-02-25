@@ -43,7 +43,7 @@ pub trait DecklinkFrameBase {
     /// Get the flags of the video frame
     fn flags(&self) -> DecklinkFrameFlags;
     /// Get the pixel data of the video frame
-    fn bytes(&self) -> Result<DecklinkAlignedBytes, SdkError>;
+    fn bytes(&self) -> Result<DecklinkAlignedBytes<'_>, SdkError>;
 }
 pub trait DecklinkFrameBase2: DecklinkFrameBase {
     /// Get the pixel data of the video frame
@@ -109,7 +109,7 @@ impl DecklinkFrameBase for DecklinkVideoFrame {
         DecklinkFrameFlags::from_bits_truncate(flags)
     }
 
-    fn bytes(&self) -> Result<DecklinkAlignedBytes, SdkError> {
+    fn bytes(&self) -> Result<DecklinkAlignedBytes<'_>, SdkError> {
         self.bytes_handle()
     }
 }
@@ -119,9 +119,9 @@ impl DecklinkVideoFrame {
     pub fn bytes_to_vec(&self) -> Result<Vec<u8>, SdkError> {
         assert!(!self.frame.is_null());
 
-        let bytes = null_mut();
+        let bytes = std::ptr::dangling_mut();
         let result = unsafe { sdk::cdecklink_video_frame_get_bytes(self.frame, bytes) };
-        SdkError::result(result)?;
+        SdkError::result::<()>(result)?;
 
         assert!(!bytes.is_null());
 
@@ -134,12 +134,12 @@ impl DecklinkVideoFrame {
     }
 
     /// Get the pixel data of the video frame
-    pub fn bytes_handle(&self) -> Result<DecklinkAlignedBytes, SdkError> {
+    pub fn bytes_handle(&self) -> Result<DecklinkAlignedBytes<'_>, SdkError> {
         assert!(!self.frame.is_null());
 
-        let bytes = null_mut();
+        let bytes = std::ptr::dangling_mut();
         let result = unsafe { sdk::cdecklink_video_frame_get_bytes(self.frame, bytes) };
-        SdkError::result(result)?;
+        SdkError::result::<()>(result)?;
 
         assert!(!bytes.is_null());
 
@@ -190,7 +190,7 @@ impl DecklinkFrameBase for DecklinkVideoMutableFrame {
         self.flags
     }
 
-    fn bytes(&self) -> Result<DecklinkAlignedBytes, SdkError> {
+    fn bytes(&self) -> Result<DecklinkAlignedBytes<'_>, SdkError> {
         if let Some(bytes) = &self.bytes {
             Ok(DecklinkAlignedBytes(&bytes))
         } else {

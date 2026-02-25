@@ -74,7 +74,7 @@ impl DecklinkOutputDeviceVideoSync for DecklinkOutputDeviceVideoImpl {
 
         let mut ptr = std::ptr::null_mut();
         let result = unsafe { sdk::cdecklink_video_frame_get_bytes(decklink_frame.ptr, &mut ptr) };
-        SdkError::result(result)?;
+        SdkError::result::<()>(result)?;
 
         let byte_count = frame.row_bytes() * frame.height();
         let src_bytes = frame.bytes()?;
@@ -102,7 +102,7 @@ impl DecklinkOutputDeviceVideoSync for DecklinkOutputDeviceVideoImpl {
                 &mut decklink_frame.ptr,
             )
         };
-        SdkError::result(result)?;
+        SdkError::result::<()>(result)?;
 
         if decklink_frame.ptr.is_null() {
             Err(SdkError::FAIL)?;
@@ -154,7 +154,7 @@ impl DecklinkOutputDeviceVideoScheduled for DecklinkOutputDeviceVideoImpl {
 
         let mut bytes_ptr = std::ptr::null_mut();
         let result = unsafe { sdk::cdecklink_video_frame_get_bytes(frame.ptr, &mut bytes_ptr) };
-        SdkError::result(result)?;
+        SdkError::result::<()>(result)?;
         if bytes_ptr.is_null() {
             Err(SdkError::FAIL)?;
         }
@@ -264,7 +264,7 @@ impl DecklinkOutputDeviceVideoImpl {
                 frame.flags().bits(),
                 &mut c_frame,
             );
-            SdkError::result(res)?;
+            SdkError::result::<()>(res)?;
 
             if c_frame.is_null() {
                 Err(SdkError::FAIL)?;

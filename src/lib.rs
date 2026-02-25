@@ -47,7 +47,7 @@ pub fn api_version() -> Result<String, SdkError> {
 
         unsafe { sdk::cdecklink_iterator_release(it) };
 
-        SdkError::result(result)?;
+        SdkError::result::<()>(result)?;
 
         let str = unsafe { convert_and_release_c_string(s) };
 
