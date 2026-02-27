@@ -19,6 +19,25 @@ pub enum SdkError {
 }
 
 impl SdkError {
+    /// Return the raw HRESULT code for this error.
+    pub(crate) fn code(&self) -> i32 {
+        // The enum discriminant values are the HRESULT codes
+        // We can safely transmute since the repr is i32-compatible
+        match self {
+            SdkError::FALSE => 0x0000_0001,
+            SdkError::UNEXPECTED => -0x0000_FFFFi32,
+            SdkError::NOTIMPL => -0x0000_0001i32,
+            SdkError::OUTOFMEMORY => -0x0000_0002i32,
+            SdkError::INVALIDARG => -0x0000_0003i32,
+            SdkError::NOINTERFACE => -0x0000_0004i32,
+            SdkError::POINTER => -0x0000_0005i32,
+            SdkError::HANDLE => -0x0000_0006i32,
+            SdkError::ABORT => -0x0000_0007i32,
+            SdkError::FAIL => -0x0000_0008i32,
+            SdkError::ACCESSDENIED => -0x0009i32,
+        }
+    }
+
     #[allow(overflowing_literals)]
     pub(crate) fn from(value: i32) -> SdkError {
         Self::from_i32(value).unwrap_or(SdkError::FALSE)

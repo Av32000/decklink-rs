@@ -14,6 +14,10 @@ exclude = [
     "gen-bindings.sh",
 ]
 
+[features]
+default = []
+cuda = ["cudarc"]
+
 [dependencies]
 num-traits = "0.2"
 num-derive = "0.4"
@@ -21,9 +25,15 @@ bitflags = "2.0"
 strum = "0.25"
 strum_macros = "0.25"
 aligned-vec = "0.5"
+cudarc = { version = "0.19.3", optional = true, features = [ "cuda-version-from-build-system" ] }
 
 [build-dependencies]
 cmake = "0.1"
 
 [dev-dependencies]
 text_io = "0.1"
+cudarc = { version = "0.19.3", features = ["cuda-version-from-build-system"] }
+
+[[example]]
+name = "cuda_capture"
+required-features = ["cuda"]

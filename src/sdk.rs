@@ -2981,9 +2981,7 @@ unsafe extern "C" {
     ) -> HRESULT;
 }
 unsafe extern "C" {
-    pub fn cdecklink_video_frame_end_access(
-        obj: *mut cdecklink_video_frame_t,
-    ) -> HRESULT;
+    pub fn cdecklink_video_frame_end_access(obj: *mut cdecklink_video_frame_t) -> HRESULT;
 }
 unsafe extern "C" {
     pub fn cdecklink_video_input_frame_to_video_frame(
@@ -3688,6 +3686,73 @@ unsafe extern "C" {
         buffer: *mut ::std::os::raw::c_void,
         finalizer: cdecklink_custom_video_frame_free_bytes,
         context: *mut ::std::os::raw::c_void,
+    ) -> HRESULT;
+}
+pub type cdecklink_custom_video_buffer_get_bytes_fn = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut ::std::os::raw::c_void,
+        buffer: *mut *mut ::std::os::raw::c_void,
+    ) -> HRESULT,
+>;
+pub type cdecklink_custom_video_buffer_start_access_fn = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut ::std::os::raw::c_void,
+        flags: DecklinkBufferAccessFlags,
+    ) -> HRESULT,
+>;
+pub type cdecklink_custom_video_buffer_end_access_fn = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut ::std::os::raw::c_void,
+        flags: DecklinkBufferAccessFlags,
+    ) -> HRESULT,
+>;
+pub type cdecklink_custom_video_buffer_release_fn =
+    ::std::option::Option<unsafe extern "C" fn(context: *mut ::std::os::raw::c_void)>;
+unsafe extern "C" {
+    pub fn cdecklink_custom_video_buffer_create(
+        context: *mut ::std::os::raw::c_void,
+        get_bytes: cdecklink_custom_video_buffer_get_bytes_fn,
+        start_access: cdecklink_custom_video_buffer_start_access_fn,
+        end_access: cdecklink_custom_video_buffer_end_access_fn,
+        release_fn: cdecklink_custom_video_buffer_release_fn,
+        out_buffer: *mut *mut cdecklink_video_buffer_t,
+    ) -> HRESULT;
+}
+pub type cdecklink_custom_video_buffer_allocator_allocate_fn = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut ::std::os::raw::c_void,
+        allocatedBuffer: *mut *mut cdecklink_video_buffer_t,
+    ) -> HRESULT,
+>;
+pub type cdecklink_custom_video_buffer_allocator_release_fn =
+    ::std::option::Option<unsafe extern "C" fn(context: *mut ::std::os::raw::c_void)>;
+unsafe extern "C" {
+    pub fn cdecklink_custom_video_buffer_allocator_create(
+        context: *mut ::std::os::raw::c_void,
+        allocate: cdecklink_custom_video_buffer_allocator_allocate_fn,
+        release_fn: cdecklink_custom_video_buffer_allocator_release_fn,
+        out_allocator: *mut *mut cdecklink_video_buffer_allocator_t,
+    ) -> HRESULT;
+}
+pub type cdecklink_custom_video_buffer_allocator_provider_get_allocator_fn = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut ::std::os::raw::c_void,
+        bufferSize: u32,
+        width: u32,
+        height: u32,
+        rowBytes: u32,
+        pixelFormat: DecklinkPixelFormat,
+        allocator: *mut *mut cdecklink_video_buffer_allocator_t,
+    ) -> HRESULT,
+>;
+pub type cdecklink_custom_video_buffer_allocator_provider_release_fn =
+    ::std::option::Option<unsafe extern "C" fn(context: *mut ::std::os::raw::c_void)>;
+unsafe extern "C" {
+    pub fn cdecklink_custom_video_buffer_allocator_provider_create(
+        context: *mut ::std::os::raw::c_void,
+        get_allocator: cdecklink_custom_video_buffer_allocator_provider_get_allocator_fn,
+        release_fn: cdecklink_custom_video_buffer_allocator_provider_release_fn,
+        out_provider: *mut *mut cdecklink_video_buffer_allocator_provider_t,
     ) -> HRESULT;
 }
 pub type cdecklink_notification_callback_notify_handle = ::std::os::raw::c_void;

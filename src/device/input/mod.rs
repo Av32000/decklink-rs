@@ -2,6 +2,7 @@ mod device;
 pub mod enums;
 mod video_callback;
 
+use crate::allocator::{create_c_allocator_provider, VideoBufferAllocatorProvider};
 use crate::device::input::device::DecklinkInputDevicePtr;
 use crate::device::input::video_callback::{register_input_callback, InputCallbackWrapper};
 use crate::display_mode::{
@@ -22,6 +23,8 @@ pub struct DecklinkInputDevice {
     ptr: Arc<DecklinkInputDevicePtr>,
     callback_wrapper: *mut InputCallbackWrapper,
     video_active: bool,
+    /// C allocator provider pointer, released on drop.
+    allocator_provider: *mut sdk::cdecklink_video_buffer_allocator_provider_t,
 }
 
 // Safety: The underlying C pointer is thread-safe for the operations we perform
@@ -78,6 +81,7 @@ impl DecklinkInputDevice {
             }),
             callback_wrapper: null_mut(),
             video_active: false,
+            allocator_provider: null_mut(),
         }
     }
 
@@ -113,7 +117,63 @@ impl DecklinkInputDevice {
         let result = unsafe { sdk::cdecklink_input_disable_video_input(self.ptr.dev) };
         self.video_active = false;
         self.ptr.video_active.store(false, Ordering::Relaxed);
+
+        // Release the allocator provider if one was set
+        if !self.allocator_provider.is_null() {
+            unsafe {
+                sdk::cdecklink_video_buffer_allocator_provider_release(self.allocator_provider)
+            };
+            self.allocator_provider = null_mut();
+        }
+
         SdkError::result(result)
+    }
+
+    /// Enable video input with a custom allocator provider.
+    ///
+    /// The allocator provider controls where DeckLink writes incoming frame data.
+    /// This is useful for receiving frames directly into GPU memory (e.g. CUDA).
+    ///
+    /// The provider will be asked to create allocators for specific buffer
+    /// specifications, and those allocators will be used to allocate individual
+    /// video buffers where DeckLink DMAs frame data.
+    ///
+    /// A callback must be set before starting streams.
+    pub fn enable_video_input_with_allocator(
+        &mut self,
+        mode: DecklinkDisplayModeId,
+        pixel_format: DecklinkPixelFormat,
+        flags: enums::DecklinkVideoInputFlags,
+        provider: Arc<dyn VideoBufferAllocatorProvider>,
+    ) -> Result<(), SdkError> {
+        if self.ptr.video_active.swap(true, Ordering::Relaxed) {
+            return Err(SdkError::ACCESSDENIED);
+        }
+
+        // Create the C allocator provider from the Rust trait object
+        let c_provider = create_c_allocator_provider(provider)?;
+
+        let result = unsafe {
+            sdk::cdecklink_input_enable_video_input_with_allocator_provider(
+                self.ptr.dev,
+                mode as u32,
+                pixel_format as u32,
+                flags.bits(),
+                c_provider,
+            )
+        };
+
+        if !SdkError::is_ok(result) {
+            // Release the C provider on failure
+            unsafe { sdk::cdecklink_video_buffer_allocator_provider_release(c_provider) };
+            self.ptr.video_active.store(false, Ordering::Relaxed);
+            return Err(SdkError::from(result));
+        }
+
+        // Store the provider so we release it on drop/disable
+        self.allocator_provider = c_provider;
+        self.video_active = true;
+        Ok(())
     }
 
     /// Enable audio input with the specified sample rate, sample type, and channel count.
@@ -220,6 +280,12 @@ impl Drop for DecklinkInputDevice {
                 );
                 drop(Box::from_raw(self.callback_wrapper));
                 self.callback_wrapper = null_mut();
+            }
+
+            // Release the allocator provider if one was set
+            if !self.allocator_provider.is_null() {
+                sdk::cdecklink_video_buffer_allocator_provider_release(self.allocator_provider);
+                self.allocator_provider = null_mut();
             }
         }
     }

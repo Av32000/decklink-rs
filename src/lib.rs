@@ -16,11 +16,15 @@ extern crate strum_macros;
 // #[link(name = "decklink_c", kind = "static")]
 mod sdk;
 
+pub mod allocator;
 pub mod connectors;
 pub mod device;
 pub mod display_mode;
 pub mod frame;
 mod util;
+
+#[cfg(feature = "cuda")]
+pub mod cuda;
 
 use std::ptr::null;
 use util::convert_and_release_c_string;
