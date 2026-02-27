@@ -1,3 +1,0 @@
-[submodule "vendor/libdecklink_c"]
-	path = vendor/libdecklink_c
-	url = https://github.com/Av32000/decklink-c
